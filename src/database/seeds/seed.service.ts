@@ -1,16 +1,13 @@
-// import { Injectable } from '@nestjs/common';
-// import { DataSource } from 'typeorm';
-// import CreatePlayers from './players.seed';
-// import CreateTorunaments from './tournaments.seed';
+import { Injectable } from '@nestjs/common';
+import { DataSource } from 'typeorm';
+import CreateRoles from './roles.seed';
 
-// @Injectable()
-// export class SeedService {
-//   constructor(private readonly dataSource: DataSource) {}
+@Injectable()
+export class SeedService {
+  constructor(private readonly dataSource: DataSource) {}
 
-//   async seed(){
-//     const playerSeeder = new CreatePlayers()
-//     const tournametSeeder = new CreateTorunaments
-//     await playerSeeder.run(this.dataSource)
-//     await tournametSeeder.run(this.dataSource)
-//   }
-// }
+  async seed(){
+    const roleSeeder = new CreateRoles()
+    await roleSeeder.run(this.dataSource)
+  }
+}

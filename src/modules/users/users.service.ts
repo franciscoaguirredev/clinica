@@ -8,7 +8,7 @@ import * as bcrypt from 'bcrypt';
 import { handleError, handleResponse } from 'src/common/utils/response.util';
 
 @Injectable()
-export class usersService {
+export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
