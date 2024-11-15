@@ -15,15 +15,16 @@ import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { User } from './entities/user.entity';
 
-@ApiTags('users')
-@ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'))
+// @ApiTags('users')
+// @ApiBearerAuth()
+// @UseGuards(AuthGuard('jwt'))
 @Controller('users')
 export class usersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
   async findAll() {
+    console.log('users');
     return await this.usersService.findAll();
   }
 

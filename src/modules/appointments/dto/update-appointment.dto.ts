@@ -1,17 +1,17 @@
 import { IsOptional, IsDate, IsString } from 'class-validator';
 
 export class UpdateAppointmentDto {
-    @IsOptional()
-    @IsString()
-    reason?: string;
+  @IsOptional()
+  @IsString()
+  reason?: string;
 
-    @IsOptional()
-    @IsDate()
-    date?: Date;
+  @IsOptional()
+  @IsDate()
+  date?: Date;
 
-    @IsOptional()
-    userId?: number; // Actualización opcional del usuario
+  @IsOptional()
+  userId?: number;
 
-    @IsOptional()
-    doctorId?: number; // Actualización opcional del médico
+  @IsOptional()
+  doctorId?: number;
 }

@@ -1,17 +1,17 @@
 import { IsNotEmpty, IsDate, IsString } from 'class-validator';
 
 export class CreateAppointmentDto {
-    @IsNotEmpty()
-    @IsString()
-    reason: string;
+  @IsNotEmpty()
+  @IsString()
+  reason: string;
 
-    @IsNotEmpty()
-    @IsDate()
-    date: Date;
+  @IsNotEmpty()
+  @IsDate()
+  date: Date;
 
-    @IsNotEmpty()
-    userId: number;
+  @IsNotEmpty()
+  userId: number;
 
-    @IsNotEmpty()
-    doctorId: number;
+  @IsNotEmpty()
+  doctorId: number;
 }

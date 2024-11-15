@@ -2,23 +2,22 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
-import { DatabaseModule } from './database.module';
+import { RolesModule } from './modules/roles/roles.module';
+import { usersModule } from './modules/users/users.module';
+import { CommitsModule } from './modules/commits/commits.module';
+import { AppointmentsModule } from './modules/appointments/appointments.module';
 import { AuthModule } from './auth/auth.module';
-import { User } from './modules/users/entities/user.entity';
-import { Role } from './modules/roles/entities/role.entity';
-import { Appointment } from './modules/appointments/entities/appointment.entity';
-import { Commit } from './modules/commits/entities/commit.entity';
-
+import { DatabaseModule } from './database.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    DatabaseModule,
+    RolesModule,
+    usersModule,
+    CommitsModule,
+    AppointmentsModule,
     AuthModule,
-    User,
-    Role, 
-    Appointment,
-    Commit
+    DatabaseModule,
   ],
   controllers: [AppController],
   providers: [AppService],
