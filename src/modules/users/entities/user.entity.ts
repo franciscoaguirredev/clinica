@@ -1,4 +1,6 @@
 
+import { Appointment } from "src/modules/appointments/entities/appointment.entity";
+import { Commit } from "src/modules/commits/entities/commit.entity";
 import { Role } from "src/modules/roles/entities/role.entity";
 import {Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
@@ -25,4 +27,12 @@ export class User {
     @ManyToOne(() => Role, Role => Role.id)
     role: number;
 
+    @OneToMany(() => Appointment, (appointment) => appointment.user)
+    appointments: Appointment[];
+
+    @OneToMany(() => Appointment, (appointment) => appointment.doctor)
+    attendedAppointments: Appointment[];
+
+    @OneToMany(() => Commit, (commit) => commit.user)
+    commits: Commit[];
 }
