@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { All, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Appointment } from './entities/appointment.entity';
@@ -23,7 +23,7 @@ export class AppointmentsService {
       const responseExist = await this.existUser(userId, doctorId);
 
       if (!responseExist) {
-        throw new NotFoundException(`User or doctor not exist`);
+        throw new NotFoundException(`user or doctor does not exist`);
       }
 
       const dateAppointment = new Date(date);
@@ -34,12 +34,13 @@ export class AppointmentsService {
         );
       }
 
-      const availability = this.validateAvailabilityDateAppointment(
+      const availability = await this.validateAvailabilityDateAppointment(
         date,
         doctorId,
       );
-      if (!availability) {
-        throw new NotFoundException(`Appointment not available`);
+
+      if (availability) {
+        throw new NotFoundException(`Appointment not available, busy doctor`);
       }
 
       const user = await this.userRepository.findOne({ where: { id: userId } });
@@ -80,18 +81,15 @@ export class AppointmentsService {
   }
 
   async findAll() {
-    const findAll = await this.appointmentRepository
-      .createQueryBuilder('appointment')
-      .leftJoinAndSelect('appointment.doctor', 'user');
-
-    const [data] = await findAll.getManyAndCount();
-    const id = data[5].doctor.id;
-    console.log(id);
-    console.log(typeof id);
-    console.log(data[5].doctor.id);
-
-    return data;
+    const findAllAppointments = await this.appointmentRepository.find({
+      relations: {
+        user: true,
+        doctor: true,
+      },
+    });
+    return findAllAppointments;
   }
+
   async update(
     id: number,
     updateAppointmentDto: UpdateAppointmentDto,
@@ -106,49 +104,27 @@ export class AppointmentsService {
     await this.appointmentRepository.remove(appointment);
   }
 
-  // private async validateAvailabilityDateAppointment(
-  //   dateAppointment: string,
-  //   doctorId,
-  // ) {
-  //   const findAll = await this.appointmentRepository
-  //     .createQueryBuilder('appointment')
-  //     .leftJoinAndSelect('appointment.doctor', 'user');
-
-  //   const [data] = await findAll.getManyAndCount();
-
-  //   let duplicate = false;
-  //   for (let i = 0; i < data.length; i++) {
-  //     console.log(data[i].doctor.id);
-  //   }
-  //   return duplicate;
-  // }
-
   private async validateAvailabilityDateAppointment(
-    date: string,
-    doctorId: number,
-  ): Promise<boolean> {
-    const dateToCheck = new Date(date).toISOString(); // Convertir fecha a formato ISO
-    const existingAppointments = await this.appointmentRepository
-      .createQueryBuilder('appointment')
-      .leftJoinAndSelect('appointment.doctor', 'doctor')
-      .where('doctor.id = :doctorId', { doctorId })
-      .andWhere('appointment.date = :date', { date: dateToCheck })
-      .getOne();
-    console.log(existingAppointments);
+    dateAppointment: string,
+    doctorId,
+  ) {
+    const AllAppointments = await this.findAll();
 
-    if (existingAppointments !== null) {
-      return true;
-    }
-    // Si se encuentra un resultado, el horario ya está reservado
-    return false;
+    return AllAppointments.some(
+      (appointment):boolean =>
+        appointment.doctor.id == doctorId &&
+        appointment.date.toISOString() == dateAppointment,
+    );
   }
 
   async existUser(userId: number, doctorId: number): Promise<boolean> {
     let id = userId;
     const user = await this.userRepository.findOne({ where: { id } });
     id = doctorId;
-    const doctor = await this.userRepository.findOne({ where: { id } });
-    if (!user || !doctorId) {
+    const doctor = await this.userRepository.findOne({ relations: ['role'], where: {id}});
+    console.log(doctor);
+    
+    if (!user || !doctor || doctor.id !== 2) {
       return false;
     }
     return true;

@@ -30,7 +30,9 @@ export class UsersService {
 
   async findAll(): Promise<any> {
     try {
-      const data = await this.userRepository.find();
+      const data = await this.userRepository.find({
+        relations:['role']
+      });
       return handleResponse(data, 'users found successfully', HttpStatus.OK)
     } catch (error) {
       handleError(error, 'Failed to find users')
