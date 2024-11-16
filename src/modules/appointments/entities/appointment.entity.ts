@@ -23,7 +23,7 @@ export class Appointment {
   reason: string;
 
   @Column({
-    type: 'date',
+    type: 'timestamptz',
     name: 'purchaseDate',
     default: () => 'CURRENT_TIMESTAMP',
   })
