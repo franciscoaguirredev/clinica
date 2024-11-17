@@ -106,7 +106,7 @@ export class AppointmentsService {
 
   private async validateAvailabilityDateAppointment(
     dateAppointment: string,
-    doctorId,
+    doctorId: number,
   ) {
     const AllAppointments = await this.findAll();
 
@@ -122,7 +122,6 @@ export class AppointmentsService {
     const user = await this.userRepository.findOne({ where: { id } });
     id = doctorId;
     const doctor = await this.userRepository.findOne({ relations: ['role'], where: {id}});
-    console.log(doctor);
     
     if (!user || !doctor || doctor.id !== 2) {
       return false;
