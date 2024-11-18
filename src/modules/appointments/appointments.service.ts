@@ -228,7 +228,6 @@ export class AppointmentsService {
         throw new NotFoundException(`Appointment with ID ${id} not found`);
       }
   
-      
       return await this.appointmentRepository.remove(appointment)
     } catch (error) {
       if (error instanceof NotFoundException) {

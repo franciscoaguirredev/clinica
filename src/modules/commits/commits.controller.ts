@@ -7,9 +7,14 @@ import { UpdateCommitDto } from './dto/update-commit.dto';
 export class CommitsController {
   constructor(private readonly commitsService: CommitsService) {}
 
+  // @Post()
+  // create(@Body() createCommitDto: CreateCommitDto) {
+  //   return this.commitsService.create(createCommitDto);
+  // }
+
   @Post()
-  create(@Body() createCommitDto: CreateCommitDto) {
-    return this.commitsService.create(createCommitDto);
+  async create(@Body() createCommitDto: CreateCommitDto): Promise<any> {
+    return await this.commitsService.createCommit(createCommitDto);
   }
 
   @Get()
