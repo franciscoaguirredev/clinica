@@ -11,10 +11,10 @@ export class Commit {
     content: string; 
 
     @Column({
-        type: 'date',
+        type: 'timestamptz',
         default: () => 'CURRENT_TIMESTAMP',
     })
-    createdAt: Date; 
+    createdAt: Date;
 
     @ManyToOne(() => Appointment, (appointment) => appointment.commits, { nullable: false })
     @JoinColumn({ name: 'appointmentId' }) 

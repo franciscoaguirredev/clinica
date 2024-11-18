@@ -16,15 +16,13 @@ export class Appointment {
 
   @Column('varchar', {
     length: 255,
-    select: false,
     nullable: false,
-    name: 'name',
+    name: 'reason',
   })
   reason: string;
 
   @Column({
     type: 'timestamptz',
-    name: 'purchaseDate',
     default: () => 'CURRENT_TIMESTAMP',
   })
   date: Date;
