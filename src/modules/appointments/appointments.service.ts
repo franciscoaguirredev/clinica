@@ -1,11 +1,15 @@
-import { All, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { getManager, Repository } from 'typeorm';
 import { Appointment } from './entities/appointment.entity';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import { handleError } from 'src/common/utils/response.util';
 import { User } from '../users/entities/user.entity';
+
 
 @Injectable()
 export class AppointmentsService {
@@ -35,7 +39,7 @@ export class AppointmentsService {
       }
 
       const availability = await this.validateAvailabilityDateAppointment(
-        date,
+        dateAppointment,
         doctorId,
       );
 
@@ -67,6 +71,38 @@ export class AppointmentsService {
       }
       handleError(error, 'Failed to create appointment');
     }
+  }
+
+  private async existUser(userId: number, doctorId: number): Promise<boolean> {
+    
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+
+    const doctor = await this.userRepository.findOne({
+      relations: { role: true },
+      where: { id: doctorId },
+    });
+
+    if (!user || !doctor || doctor.role.id !== 2) {
+      return false;
+    }
+    return true;
+  }
+
+  private async validateAvailabilityDateAppointment(
+    dateAppointment: Date,
+    doctorId: number,
+  ) {
+    const AllAppointments = await this.findAll();
+
+    return AllAppointments.some((appointment): boolean => {
+      if (
+        appointment.doctor.id == doctorId &&
+        appointment.date.toISOString() == dateAppointment.toISOString()
+      ) {
+        return true;
+      }
+      return false;
+    });
   }
 
   async findOneById(id: number): Promise<Appointment> {
@@ -104,28 +140,5 @@ export class AppointmentsService {
     await this.appointmentRepository.remove(appointment);
   }
 
-  private async validateAvailabilityDateAppointment(
-    dateAppointment: string,
-    doctorId: number,
-  ) {
-    const AllAppointments = await this.findAll();
 
-    return AllAppointments.some(
-      (appointment):boolean =>
-        appointment.doctor.id == doctorId &&
-        appointment.date.toISOString() == dateAppointment,
-    );
-  }
-
-  async existUser(userId: number, doctorId: number): Promise<boolean> {
-    let id = userId;
-    const user = await this.userRepository.findOne({ where: { id } });
-    id = doctorId;
-    const doctor = await this.userRepository.findOne({ relations: ['role'], where: {id}});
-    
-    if (!user || !doctor || doctor.id !== 2) {
-      return false;
-    }
-    return true;
-  }
 } //Fin class Service

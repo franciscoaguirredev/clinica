@@ -12,42 +12,42 @@ export default class CreateAppointment implements Seeder {
     const appointmentData = [
       {
         reason: 'Consulta General',
-        date: '2024-12-01T09:00:00.000',
+        date: '2024-12-01 09:00:00.000',
         commits: [],
         userId: 3,
         doctorId: 4,
       },
       {
         reason: 'Consulta General',
-        date: '2024-12-01T09:00:00.000',
+        date: '2024-12-01 09:00:00.000',
         commits: [],
         userId: 2,
         doctorId: 5,
       },
       {
         reason: 'Ortopedia',
-        date: '2024-12-01T09:00:00.000',
+        date: '2024-12-01 09:00:00.000',
         commits: [],
         userId: 1,
         doctorId: 6,
       },
       {
         reason: 'Ortopedia',
-        date: '2024-12-15T09:00:00.000',
+        date: '2024-12-15 09:00:00.000',
         commits: [],
         userId: 3,
         doctorId: 6
       },
       {
         reason: 'Ortopedia',
-        date: '2024-12-30T09:00:00.000',
+        date: '2024-12-30 09:00:00.000',
         commits: [],
         userId: 1,
         doctorId: 6,
       },
       {
         reason: 'Consulta General - Revisión Examenes',
-        date: '2024-12-30T09:00:00.000',
+        date: '2024-12-30 09:00:00.000',
         commits: [],
         userId: 3,
         doctorId: 4,

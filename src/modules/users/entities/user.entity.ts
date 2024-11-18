@@ -1,4 +1,5 @@
 
+import { IRoleId } from "src/common/interfaces/roleId.interface";
 import { Appointment } from "src/modules/appointments/entities/appointment.entity";
 import { Commit } from "src/modules/commits/entities/commit.entity";
 import { Role } from "src/modules/roles/entities/role.entity";
@@ -25,7 +26,7 @@ export class User {
     password:string
 
     @ManyToOne(() => Role, Role => Role.id)
-    role: number;
+    role: IRoleId;
 
     @OneToMany(() => Appointment, (appointment) => appointment.user)
     appointments: Appointment[];

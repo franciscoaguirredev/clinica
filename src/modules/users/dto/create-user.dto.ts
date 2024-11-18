@@ -7,6 +7,8 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
+import { IRoleId } from 'src/common/interfaces/roleId.interface';
+import { Role } from 'src/modules/roles/entities/role.entity';
 
 export class CreateUserDto {
   @IsNotEmpty()
@@ -32,5 +34,5 @@ export class CreateUserDto {
 
   @IsNotEmpty()
   @IsInt()
-  role: number;
+  role: IRoleId;
 }

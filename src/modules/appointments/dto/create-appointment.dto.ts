@@ -9,7 +9,7 @@ export class CreateAppointmentDto {
   @IsNotEmpty()
   @IsDate()
   @IsDefined()
-  date: string;
+  date: Date;
 
   @IsNotEmpty()
   @IsDefined()

@@ -11,49 +11,49 @@ export default class CreateUsers implements Seeder {
         name: 'Alberto Acosta',
         email: 'alberto@correo.com',
         password: 'Qwer1234*',
-        role: 1,
+        role: {id:1},
       },
       {
         name: 'Bibiana Bermudez',
         email: 'bibiana@correo.com',
         password: 'Qwer1234*',
-        role: 1,
+        role: {id:1},
       },
       {
         name: 'Carlos Castro',
         email: 'carlos@correo.com',
         password: 'Qwer1234*',
-        role: 1,
+        role: {id:1},
       },
       {
         name: 'Daniel Díaz',
         email: 'daniel@correo.com',
         password: 'Qwer1234*',
-        role: 2,
+        role: {id:2},
       },
       {
         name: 'Erika Echeverri',
         email: 'erika@correo.com',
         password: 'Qwer1234*',
-        role: 2,
+        role: {id:2}
       },
       {
         name: 'Fernando Franco',
         email: 'fernando@correo.com',
         password: 'Qwer1234*',
-        role: 2,
+        role: {id:2}
       },      
       {
         name: 'Gisela Gomez',
         email: 'gisela@correo.com',
         password: 'Qwer1234*',
-        role: 3,
+        role: {id:3},
       },
       {
         name: 'sistemas',
         email: 'sistemas@correo.com',
         password: 'Qwer1234*',
-        role: 4,
+        role: {id:4}
       },
     ];
 
