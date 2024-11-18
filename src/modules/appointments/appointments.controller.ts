@@ -10,10 +10,12 @@ import {
   HttpCode,
   HttpStatus,
   NotFoundException,
+  Query,
 } from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
+import { PaginationDto } from './dto/pagination-appointment.dto';
 
 @Controller('appointments')
 export class AppointmentsController {
@@ -25,8 +27,8 @@ export class AppointmentsController {
   }
 
   @Get()
-  async findAll() {
-    return await this.appointmentsService.findAll();
+  async findAll(@Query() paginatioDto:PaginationDto) {
+    return await this.appointmentsService.getAppointmentsPagination(paginatioDto);
   }
 
   @Get(':id')
@@ -34,9 +36,8 @@ export class AppointmentsController {
     return await this.appointmentsService.findOneById(id);
   }
 
-
   @Post('checkAvailability')
-  async checkAvailability(@Body() checkAvailabilityDto) {
+  checkAvailability(@Body() checkAvailabilityDto) {
     const { doctorId, date } = checkAvailabilityDto;
 
     const appointmentDate = new Date(date);
@@ -44,7 +45,10 @@ export class AppointmentsController {
     if (isNaN(appointmentDate.getTime())) {
       throw new NotFoundException('Invalid date format');
     }
-    return await this.appointmentsService.checkAvailabilityDoctor(doctorId, appointmentDate);
+    return this.appointmentsService.checkAvailabilityDoctor(
+      doctorId,
+      appointmentDate,
+    );
   }
 
 

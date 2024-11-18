@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { getManager, Repository } from 'typeorm';
 import { Appointment } from './entities/appointment.entity';
@@ -12,7 +9,7 @@ import { User } from '../users/entities/user.entity';
 import { dateToGMT } from 'src/common/utils/dateToGMT.util';
 import { error } from 'console';
 import { IAppointmentResponse } from 'src/common/interfaces/appointment.response';
-
+import { PaginationDto } from './dto/pagination-appointment.dto';
 
 @Injectable()
 export class AppointmentsService {
@@ -23,8 +20,9 @@ export class AppointmentsService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async create(createAppointmentDto: CreateAppointmentDto): Promise<IAppointmentResponse> {
-    
+  async create(
+    createAppointmentDto: CreateAppointmentDto,
+  ): Promise<IAppointmentResponse> {
     try {
       const { userId, doctorId, date, reason } = createAppointmentDto;
 
@@ -45,10 +43,10 @@ export class AppointmentsService {
       const availability = await this.validateAvailabilityDateAppointment(
         dateAppointment,
         doctorId,
-        userId
+        userId,
       );
 
-      if (availability.length > 0 ) {
+      if (availability.length > 0) {
         throw new NotFoundException(availability);
       }
 
@@ -65,7 +63,13 @@ export class AppointmentsService {
         doctor,
       });
       await this.appointmentRepository.save(appointment);
-      return {id: appointment.id,reason, date: dateToGMT(dateAppointment), userId:user, doctorId: doctor}
+      return {
+        id: appointment.id,
+        reason,
+        date: dateToGMT(dateAppointment),
+        userId: user,
+        doctorId: doctor,
+      };
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
@@ -75,7 +79,6 @@ export class AppointmentsService {
   }
 
   private async existUser(userId: number, doctorId: number): Promise<boolean> {
-    
     const user = await this.userRepository.findOne({ where: { id: userId } });
 
     const doctor = await this.userRepository.findOne({
@@ -92,7 +95,7 @@ export class AppointmentsService {
   private async validateAvailabilityDateAppointment(
     dateAppointment: Date,
     doctorId: number,
-    userId:number
+    userId: number,
   ): Promise<string> {
     const AllAppointments = await this.appointmentRepository.find({
       relations: {
@@ -101,25 +104,18 @@ export class AppointmentsService {
       },
     });
 
-    for (const appointment of AllAppointments){
-      const dateRequest = dateAppointment.toISOString()
-      const dateofDB = appointment.date.toISOString()
-      if (
-        appointment.doctor.id == doctorId &&
-        dateRequest == dateofDB
-      ) {
-        return "The DOCTOR already has an appointment with another USER at the same time.";
+    for (const appointment of AllAppointments) {
+      const dateRequest = dateAppointment.toISOString();
+      const dateofDB = appointment.date.toISOString();
+      if (appointment.doctor.id == doctorId && dateRequest == dateofDB) {
+        return 'The DOCTOR already has an appointment with another USER at the same time.';
       }
 
-      if (
-        appointment.user.id == userId &&
-        dateRequest == dateofDB
-      ) {
-        return "The USER already has an appointment with another DOCTOR at the same time.";
+      if (appointment.user.id == userId && dateRequest == dateofDB) {
+        return 'The USER already has an appointment with another DOCTOR at the same time.';
       }
-      
-    };
-    return "";
+    }
+    return '';
   }
 
   async findOneById(id: number): Promise<IAppointmentResponse> {
@@ -137,8 +133,8 @@ export class AppointmentsService {
         reason: findAppointment.reason,
         date: dateToGMT(findAppointment.date),
         userId: findAppointment.user,
-        doctorId: findAppointment.doctor
-      }
+        doctorId: findAppointment.doctor,
+      };
 
       return appointment;
     } catch (error) {
@@ -156,10 +152,10 @@ export class AppointmentsService {
         doctor: true,
       },
     });
-    let AllAppointments = []
+    let AllAppointments = [];
     findAllAppointments.forEach((appointment) => {
-      const formattedDate = dateToGMT(appointment.date)
-    
+      const formattedDate = dateToGMT(appointment.date);
+
       AllAppointments.push({
         id: appointment.id,
         reason: appointment.reason,
@@ -168,7 +164,7 @@ export class AppointmentsService {
         doctor: appointment.doctor,
       });
     });
-    
+
     return AllAppointments;
   }
 
@@ -177,42 +173,51 @@ export class AppointmentsService {
     updateAppointmentDto: UpdateAppointmentDto,
   ): Promise<IAppointmentResponse> {
     try {
-
-      const responseExist = await this.existUser(updateAppointmentDto.userId, updateAppointmentDto.doctorId);
+      const responseExist = await this.existUser(
+        updateAppointmentDto.userId,
+        updateAppointmentDto.doctorId,
+      );
 
       if (!responseExist) {
         throw new NotFoundException(`user or doctor does not found`);
       }
 
-      const AppointmentDate = new Date(updateAppointmentDto.date)
+      const AppointmentDate = new Date(updateAppointmentDto.date);
       const availability = await this.validateAvailabilityDateAppointment(
-        AppointmentDate, updateAppointmentDto.doctorId, updateAppointmentDto.userId
-      )
+        AppointmentDate,
+        updateAppointmentDto.doctorId,
+        updateAppointmentDto.userId,
+      );
 
-      if (availability.length > 0 ) {
+      if (availability.length > 0) {
         throw new NotFoundException(availability);
       }
 
-      const user = await this.userRepository.findOne({where:{id:updateAppointmentDto.userId}})
-      const doctor = await this.userRepository.findOne({where:{id:updateAppointmentDto.doctorId}})
-      
-      const appointment = await this.appointmentRepository.findOne({where:{id:id}});
-      
-      appointment.reason = updateAppointmentDto.reason
-      appointment.date = AppointmentDate
-      appointment.user = user
-      appointment.doctor = doctor
-      
-      await this.appointmentRepository.save(appointment)   
-      const date = dateToGMT(AppointmentDate)
+      const user = await this.userRepository.findOne({
+        where: { id: updateAppointmentDto.userId },
+      });
+      const doctor = await this.userRepository.findOne({
+        where: { id: updateAppointmentDto.doctorId },
+      });
+
+      const appointment = await this.appointmentRepository.findOne({
+        where: { id: id },
+      });
+
+      appointment.reason = updateAppointmentDto.reason;
+      appointment.date = AppointmentDate;
+      appointment.user = user;
+      appointment.doctor = doctor;
+
+      await this.appointmentRepository.save(appointment);
+      const date = dateToGMT(AppointmentDate);
       return {
         id: appointment.id,
         reason: appointment.reason,
         date: date,
         userId: user,
-        doctorId: doctor
-      }
-
+        doctorId: doctor,
+      };
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
@@ -221,15 +226,17 @@ export class AppointmentsService {
     }
   }
 
-  async remove(id: number):Promise<any> {
+  async remove(id: number): Promise<any> {
     try {
-      const appointment = await this.appointmentRepository.findOne({ where: { id } });
-  
+      const appointment = await this.appointmentRepository.findOne({
+        where: { id },
+      });
+
       if (!appointment) {
         throw new NotFoundException(`Appointment with ID ${id} not found`);
       }
-  
-      return await this.appointmentRepository.remove(appointment)
+
+      return await this.appointmentRepository.remove(appointment);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error; // Re-lanza la excepción si ya es del tipo esperado
@@ -238,27 +245,24 @@ export class AppointmentsService {
     }
   }
 
-
   async checkAvailabilityDoctor(doctorId: number, date: Date) {
     const newDate = new Date(date);
     const availability = [];
-  
 
     const timeInit = new Date(newDate.setHours(7, 0, 0, 0));
-    const hourFinal = new Date(newDate.setHours(18, 0, 0, 0)); 
-  
+    const hourFinal = new Date(newDate.setHours(18, 0, 0, 0));
+
     const userId = 0;
-  
+
     while (timeInit < hourFinal) {
-  
       const response = await this.validateAvailabilityDateAppointment(
-        new Date(timeInit), 
+        new Date(timeInit),
         doctorId,
         userId,
       );
-  
+
       if (response.length > 0) {
-        availability.push("Busy Doctor");
+        availability.push('Busy Doctor');
       } else {
         const localTime = timeInit.toLocaleTimeString('en-US', {
           hour: '2-digit',
@@ -267,17 +271,63 @@ export class AppointmentsService {
         });
         availability.push(localTime);
       }
-  
+
       timeInit.setHours(timeInit.getHours() + 1);
     }
-  
+
     return {
-      Date: newDate.toISOString().split("T")[0],
-      From: "07:00",
-      To: "18:00",
+      Date: newDate.toISOString().split('T')[0],
+      From: '07:00',
+      To: '18:00',
       availability: availability,
     };
   }
-  
+
+  async getAppointmentsPagination(pagination: PaginationDto) {
+    const { size = 30, page = 1, reason, date, userId, doctorId } = pagination;
+
+    const skippedItems = (page - 1) * size;
+
+    const filter = await this.appointmentRepository
+      .createQueryBuilder('appointment')
+      .leftJoinAndSelect('appointment.user', 'userId')
+      .leftJoinAndSelect('appointment.doctor', 'doctorId')
+      .leftJoinAndSelect('appointment.commits', 'commit')
+      .skip(skippedItems)
+      .take(size);
+
+      if (reason) {
+        filter.andWhere('appointment.reason LIKE :reason', {
+          reason: `%${reason}%`,
+        });
+      }
+    
+      if (date) {
+        filter.andWhere('DATE(appointment.date) = :date', {
+          date: date.toISOString().split('T')[0],
+        });
+      }
+    
+      if (userId) {
+        filter.andWhere('appointment.user.id = :userId', { userId });
+      }
+    
+      if (doctorId) {
+        filter.andWhere('appointment.doctor.id = :doctorId', { doctorId });
+      }
+
+    const [data, totalItems] = await filter.getManyAndCount();
+
+    return {
+      data,
+      meta: {
+        totalItems,
+        itemCount: data.length,
+        itemsPerPage: size,
+        totalPages: Math.ceil(totalItems / size),
+        currentPage: page,
+      },
+    };
+  }
 
 } //Fin class Service
