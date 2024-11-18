@@ -11,7 +11,7 @@ export class Commit {
     content: string; 
 
     @Column({
-        type: 'timestamptz',
+        type: 'timestamp',
         default: () => 'CURRENT_TIMESTAMP',
     })
     createdAt: Date;

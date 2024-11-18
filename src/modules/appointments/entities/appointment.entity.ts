@@ -22,7 +22,7 @@ export class Appointment {
   reason: string;
 
   @Column({
-    type: 'timestamptz',
+    type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP',
   })
   date: Date;
