@@ -9,6 +9,7 @@ import {
   ParseIntPipe,
   HttpCode,
   HttpStatus,
+  NotFoundException,
 } from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
@@ -32,6 +33,20 @@ export class AppointmentsController {
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return await this.appointmentsService.findOneById(id);
   }
+
+
+  @Post('checkAvailability')
+  async checkAvailability(@Body() checkAvailabilityDto) {
+    const { doctorId, date } = checkAvailabilityDto;
+
+    const appointmentDate = new Date(date);
+
+    if (isNaN(appointmentDate.getTime())) {
+      throw new NotFoundException('Invalid date format');
+    }
+    return await this.appointmentsService.checkAvailabilityDoctor(doctorId, appointmentDate);
+  }
+
 
   @Put(':id')
   async update(

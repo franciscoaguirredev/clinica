@@ -24,6 +24,7 @@ export class AppointmentsService {
   ) {}
 
   async create(createAppointmentDto: CreateAppointmentDto): Promise<IAppointmentResponse> {
+    
     try {
       const { userId, doctorId, date, reason } = createAppointmentDto;
 
@@ -237,7 +238,46 @@ export class AppointmentsService {
     }
   }
 
+
+  async checkAvailabilityDoctor(doctorId: number, date: Date) {
+    const newDate = new Date(date);
+    const availability = [];
   
+
+    const timeInit = new Date(newDate.setHours(7, 0, 0, 0));
+    const hourFinal = new Date(newDate.setHours(18, 0, 0, 0)); 
+  
+    const userId = 0;
+  
+    while (timeInit < hourFinal) {
+  
+      const response = await this.validateAvailabilityDateAppointment(
+        new Date(timeInit), 
+        doctorId,
+        userId,
+      );
+  
+      if (response.length > 0) {
+        availability.push("Busy Doctor");
+      } else {
+        const localTime = timeInit.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false,
+        });
+        availability.push(localTime);
+      }
+  
+      timeInit.setHours(timeInit.getHours() + 1);
+    }
+  
+    return {
+      Date: newDate.toISOString().split("T")[0],
+      From: "07:00",
+      To: "18:00",
+      availability: availability,
+    };
+  }
   
 
 } //Fin class Service
