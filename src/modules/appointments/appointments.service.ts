@@ -9,6 +9,7 @@ import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import { handleError } from 'src/common/utils/response.util';
 import { User } from '../users/entities/user.entity';
+import { dateToGMT } from 'src/common/utils/dateToGMT.util';
 
 
 @Injectable()
@@ -27,7 +28,7 @@ export class AppointmentsService {
       const responseExist = await this.existUser(userId, doctorId);
 
       if (!responseExist) {
-        throw new NotFoundException(`user or doctor does not exist`);
+        throw new NotFoundException(`user or doctor does not found`);
       }
 
       const dateAppointment = new Date(date);
@@ -53,18 +54,14 @@ export class AppointmentsService {
         where: { id: doctorId },
       });
 
-      if (!user || !doctor) {
-        throw new NotFoundException('User or Doctor not found');
-      }
-
       const appointment = this.appointmentRepository.create({
         reason,
         date: dateAppointment,
         user,
         doctor,
       });
-
-      return await this.appointmentRepository.save(appointment);
+      await this.appointmentRepository.save(appointment);
+      return {reason, date: dateToGMT(dateAppointment), user, doctor}
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
@@ -92,7 +89,12 @@ export class AppointmentsService {
     dateAppointment: Date,
     doctorId: number,
   ) {
-    const AllAppointments = await this.findAll();
+    const AllAppointments = await this.appointmentRepository.find({
+      relations: {
+        user: true,
+        doctor: true,
+      },
+    });
 
     return AllAppointments.some((appointment): boolean => {
       if (
@@ -123,7 +125,20 @@ export class AppointmentsService {
         doctor: true,
       },
     });
-    return findAllAppointments;
+    let AllAppointments = []
+    findAllAppointments.forEach((appointment) => {
+      const formattedDate = dateToGMT(appointment.date)
+    
+      AllAppointments.push({
+        id: appointment.id,
+        reason: appointment.reason,
+        date: formattedDate,
+        user: appointment.user,
+        doctor: appointment.doctor,
+      });
+    });
+    
+    return AllAppointments;
   }
 
   async update(

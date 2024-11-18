@@ -11,7 +11,7 @@ export class User {
 @PrimaryGeneratedColumn('increment')
     id: number
 
-    @Column('varchar', { length: 255, select: false, nullable: false, name: 'name', })
+    @Column('varchar', { length: 255, nullable: false, name: 'name', })
     name:string
 
     @Column('varchar', {
