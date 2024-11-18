@@ -10,6 +10,8 @@ import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import { handleError } from 'src/common/utils/response.util';
 import { User } from '../users/entities/user.entity';
 import { dateToGMT } from 'src/common/utils/dateToGMT.util';
+import { error } from 'console';
+import { IAppointmentResponse } from 'src/common/interfaces/appointment.response';
 
 
 @Injectable()
@@ -21,7 +23,7 @@ export class AppointmentsService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async create(createAppointmentDto: CreateAppointmentDto): Promise<any> {
+  async create(createAppointmentDto: CreateAppointmentDto): Promise<IAppointmentResponse> {
     try {
       const { userId, doctorId, date, reason } = createAppointmentDto;
 
@@ -42,10 +44,11 @@ export class AppointmentsService {
       const availability = await this.validateAvailabilityDateAppointment(
         dateAppointment,
         doctorId,
+        userId
       );
 
-      if (availability) {
-        throw new NotFoundException(`Appointment not available, busy doctor`);
+      if (availability.length > 0 ) {
+        throw new NotFoundException(availability);
       }
 
       const user = await this.userRepository.findOne({ where: { id: userId } });
@@ -61,7 +64,7 @@ export class AppointmentsService {
         doctor,
       });
       await this.appointmentRepository.save(appointment);
-      return {reason, date: dateToGMT(dateAppointment), user, doctor}
+      return {id: appointment.id,reason, date: dateToGMT(dateAppointment), userId:user, doctorId: doctor}
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
@@ -88,7 +91,8 @@ export class AppointmentsService {
   private async validateAvailabilityDateAppointment(
     dateAppointment: Date,
     doctorId: number,
-  ) {
+    userId:number
+  ): Promise<string> {
     const AllAppointments = await this.appointmentRepository.find({
       relations: {
         user: true,
@@ -96,26 +100,52 @@ export class AppointmentsService {
       },
     });
 
-    return AllAppointments.some((appointment): boolean => {
+    for (const appointment of AllAppointments){
+      const dateRequest = dateAppointment.toISOString()
+      const dateofDB = appointment.date.toISOString()
       if (
         appointment.doctor.id == doctorId &&
-        appointment.date.toISOString() == dateAppointment.toISOString()
+        dateRequest == dateofDB
       ) {
-        return true;
+        return "The DOCTOR already has an appointment with another USER at the same time.";
       }
-      return false;
-    });
+
+      if (
+        appointment.user.id == userId &&
+        dateRequest == dateofDB
+      ) {
+        return "The USER already has an appointment with another DOCTOR at the same time.";
+      }
+      
+    };
+    return "";
   }
 
-  async findOneById(id: number): Promise<Appointment> {
-    const appointment = await this.appointmentRepository.findOne({
-      where: { id },
-      relations: ['user', 'doctor'],
-    });
-    if (!appointment) {
-      throw new NotFoundException(`Cita con ID ${id} no encontrada`);
+  async findOneById(id: number): Promise<IAppointmentResponse> {
+    try {
+      const findAppointment = await this.appointmentRepository.findOne({
+        where: { id },
+        relations: ['user', 'doctor'],
+      });
+      if (!findAppointment) {
+        throw new NotFoundException(`Cita con ID ${id} no encontrada`);
+      }
+
+      const appointment = {
+        id: findAppointment.id,
+        reason: findAppointment.reason,
+        date: dateToGMT(findAppointment.date),
+        userId: findAppointment.user,
+        doctorId: findAppointment.doctor
+      }
+
+      return appointment;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      handleError(error, 'Failed to find appointment');
     }
-    return appointment;
   }
 
   async findAll() {
@@ -144,16 +174,71 @@ export class AppointmentsService {
   async update(
     id: number,
     updateAppointmentDto: UpdateAppointmentDto,
-  ): Promise<Appointment> {
-    const appointment = await this.findOneById(id);
-    Object.assign(appointment, updateAppointmentDto);
-    return await this.appointmentRepository.save(appointment);
+  ): Promise<IAppointmentResponse> {
+    try {
+
+      const responseExist = await this.existUser(updateAppointmentDto.userId, updateAppointmentDto.doctorId);
+
+      if (!responseExist) {
+        throw new NotFoundException(`user or doctor does not found`);
+      }
+
+      const AppointmentDate = new Date(updateAppointmentDto.date)
+      const availability = await this.validateAvailabilityDateAppointment(
+        AppointmentDate, updateAppointmentDto.doctorId, updateAppointmentDto.userId
+      )
+
+      if (availability.length > 0 ) {
+        throw new NotFoundException(availability);
+      }
+
+      const user = await this.userRepository.findOne({where:{id:updateAppointmentDto.userId}})
+      const doctor = await this.userRepository.findOne({where:{id:updateAppointmentDto.doctorId}})
+      
+      const appointment = await this.appointmentRepository.findOne({where:{id:id}});
+      
+      appointment.reason = updateAppointmentDto.reason
+      appointment.date = AppointmentDate
+      appointment.user = user
+      appointment.doctor = doctor
+      
+      await this.appointmentRepository.save(appointment)   
+      const date = dateToGMT(AppointmentDate)
+      return {
+        id: appointment.id,
+        reason: appointment.reason,
+        date: date,
+        userId: user,
+        doctorId: doctor
+      }
+
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      handleError(error, 'Failed to update appointment');
+    }
   }
 
-  async remove(id: number): Promise<void> {
-    const appointment = await this.findOneById(id);
-    await this.appointmentRepository.remove(appointment);
+  async remove(id: number):Promise<any> {
+    try {
+      const appointment = await this.appointmentRepository.findOne({ where: { id } });
+  
+      if (!appointment) {
+        throw new NotFoundException(`Appointment with ID ${id} not found`);
+      }
+  
+      
+      return await this.appointmentRepository.remove(appointment)
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error; // Re-lanza la excepción si ya es del tipo esperado
+      }
+      handleError(error, 'Failed to remove appointment');
+    }
   }
 
+  
+  
 
 } //Fin class Service
